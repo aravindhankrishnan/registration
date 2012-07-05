@@ -1,0 +1,54 @@
+The following changes have to be made to PCL before the registration source code can be compiled.
+
+I am assuming that the base folder for the pcl source code is /home/user/pcl. 
+
+The following files have to be changed for the registration source code to work. 
+1) /home/user/pcl/registration/include/pcl/registration/icp.h
+2) /home/user/pcl/registration/include/pcl/registration/impl/icp.hpp
+
+
+Changes to icp.h
+================
+
+Add the following piece of code in icp.h
+
+void disableRANSAC ()
+{
+        disableRANSAC_ = true;
+}
+ 
+This piece of code should be added after the following piece of code that will be seen in icp.h (around line 100)
+
+IterativeClosestPoint ()
+{
+     // some code here
+}
+
+After this scroll to the bottom of icp.h. You will see a bunch of definitions like the following
+
+using Registration <PointSource, PointTarget>::target_; 
+using Registration <PointSource, PointTarget>::nr_iterations_; 
+....
+...
+...
+...
+
+Add the following line at the end of these definitions (around line 140)
+
+bool disableRANSAC_;
+
+Changes to icp.hpp
+==================
+
+You will see the following line around line 150.
+
+if (!sac.computeModel ())
+
+Change the above line to the following
+
+if ( disableRANSAC_ || !sac.computeModel ())
+
+
+Save the files icp.h and icp.hpp. Recompile PCL and reinstall.
+
+You should now be able to compile the source code for registration. 
