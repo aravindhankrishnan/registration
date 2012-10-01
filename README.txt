@@ -46,3 +46,5 @@ ACKNOWLEDGEMENTS
 I thank my advisors Prof Srikanth Saripalli and Prof Ramon Arrowsmith and my colleague Dr. Edwin Nissen for their support
 and valuable inputs. Special thanks to Dr. Edwin Nissen for running numerous experiments on this software and
 validating the results, thereby helping me identify bugs and fix them.
+
+This work was supported by the US National Science Foundation EarthScope Program grant (EAR-1148302) and the Southern California Earthquake Center.
