@@ -37,7 +37,7 @@ The following files will now be created in the build folder
 2) texttopcd
 3) get_displacements
 
-Please read the document 'HOWTO.txt' to learn how to use these programs.
+Please read the document 'HOWTO.pdf' to learn how to use these programs.
 
 
 ACKNOWLEDGEMENTS
