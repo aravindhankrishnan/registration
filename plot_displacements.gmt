@@ -1,0 +1,67 @@
+#!/bin/csh -f
+gmtset BASEMAP_TYPE = PLAIN
+gmtset PAPER_MEDIA = a3+
+gmtset PAGE_ORIENTATION = portrait 
+gmtset ANNOT_MIN_ANGLE = 0
+gmtset OBLIQUE_ANNOTATION = 1
+gmtset Y_AXIS_TYPE = ver_text
+
+# Set output filename, grid file, map boundaries and projection. The two numbers specified in the -JX option should be in the same proportion as the (xmax-xmin)/(ymax-ymin) ratio specified in the bounds.
+set region = "mexico"
+set psfile = "$region.eps"
+set grdfile = "mexico-4m-topo"
+set bounds = "-R621000/625000/3600000/3604000"
+set proj = "-JX12.0/12.00"
+set origin = "-X3 -Y5"
+
+\rm $psfile
+
+# Set the displacements file. This should have columns Eastings, Northings, x-displacement, y-displacement, z-displacement (all in meters)
+set displacements_file = "displacements.ENxyz"
+
+# Set the circle size, minimum and maximum z-displacement values, and create a z-displacement color palette
+set circlesize = "0.2c" 
+set zmin = "-3.5"
+set zmax = "0.5"
+makecpt -Cpolar -T$zmin/$zmax/1 -Z > $region.zscale.cpt
+
+# Set the length of horizontal displacement vectors
+set arrowsize = "0.1c"
+
+# Make the basemap
+psbasemap $bounds $proj $origin -V -Ba2000f500WESN -K >>$psfile
+
+# Make a second color palette file (in gray) for the topography 
+makecpt -Cgray -T-400/220/1 -Z > $region.topo.cpt
+
+# Plot shaded topography. The grdgradient command needs to be done just once.
+grdgradient $grdfile.grd -G$grdfile.illum.grd -A45 -Ne0.5
+grdimage $grdfile.grd $bounds $proj -C$region.topo.cpt -I$grdfile.illum.grd -K -O  >> $psfile
+
+# plot z-displacements as colored circles
+awk '{print $1, $2, $5}' $displacements_file | psxy $bounds $proj -Sc$circlesize -C$region.zscale.cpt -W0.5p -V -O -K >>$psfile
+
+# plot horizontal displacements as black arrows
+awk '{print $1, $2, $3, $4, "0", "0", "0"}' $displacements_file | psvelo $bounds $proj -Se$arrowsize/1 -A0.03/0.12/0.09 -G0/0/0 -L -N -O -K -W2/0/0/0 >>$psfile
+
+# plot horizontal scalebar (displacement vectors of 1m, 2m, 3m, 4m, 5m)
+awk '{print $1, $2, $3, "0", "0", "0", "0"}' <<EOF | psvelo $bounds $proj -Se$arrowsize/1 -A0.03/0.12/0.09 -G0/0/0 -L -N -O -K -W2/0/0/0 -X8 >>$psfile
+623000 3602800 1 
+623000 3602650 2
+623000 3602400 3
+623000 3602200 4
+623000 3602000 5 
+EOF
+awk '{print $0}' <<EOF | pstext $bounds $proj -P -O -K >>$psfile
+623300 3602800 12 0 0 ML 1 m
+623300 3602600 12 0 0 ML 2 m
+623300 3602400 12 0 0 ML 3 m
+623300 3602200 12 0 0 ML 4 m
+623300 3602000 12 0 0 ML 5 m 
+EOF
+
+# plot z-displacements scale bar
+psscale -C$region.zscale.cpt -D2/2/3/0.5 -A -B1::/:m: -X4 -V -O -K >>$psfile
+
+ps2pdf $psfile
+acroread $region.pdf
